@@ -29,6 +29,7 @@ The Reddit Story Video Bot is a powerful automation tool designed to convert Red
 
 # Installation & Requirements 
 
+```
 git clone https://github.com/yourusername/reddit-story-video-bot.git
 
 cd reddit-story-video-bot
@@ -36,6 +37,6 @@ cd reddit-story-video-bot
 mkdir Background_Gameplay && mkdir Video
 
 pip install -r requirements.txt
+```
 
 Download and install FFmpeg from FFmpeg.org. Ensure FFmpeg is added to your system's PATH.
-
