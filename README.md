@@ -38,5 +38,6 @@ mkdir Background_Gameplay && mkdir Video
 
 pip install -r requirements.txt
 ```
+You will also need to set up your reddit bot using the reddit api. Watch this video for more information 
 
-Download and install FFmpeg from FFmpeg.org. Ensure FFmpeg is added to your system's PATH.
+(https://www.youtube.com/watch?v=U9Ogh1OGP-g)
