@@ -1,0 +1,12 @@
+os
+json
+praw
+time
+random
+ffmpeg
+pygame
+whisper
+requests
+moviepy
+selenium
+PIL
