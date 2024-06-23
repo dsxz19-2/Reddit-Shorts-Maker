@@ -103,7 +103,7 @@ def get_title(subreddit, post_id, image_file):
      # Add some buffer around the back_image so that when it's rounded it doesn't get cut off any text
      # This is done by adding 15 to the width and height of the back_image
      # Then change the color of the back_image so that when everything is put together it looks like one image
-     back_image = Image.new("RGBA", (back_image_width+15, back_image_height+15), (11, 20, 22, 255))
+     back_image = Image.new("RGBA", (back_image_width+20, back_image_height+20), (11, 20, 22, 255))
      title = Image.open("title.png")
      credit_bar = Image.open("credit_bar.png")
 
@@ -120,16 +120,10 @@ def get_title(subreddit, post_id, image_file):
 
      # Close the driver
      driver.close()
+
+     return back_image_height+20, back_image_width+20
     
 def voice_over(text, path_to_file="output.mp3"):
-     # The website only allows 3000 charecters in a single request so if it is longer than 3000 charecters we ignore it
-    
-    #  TODO: add a method to split the text if it is longer than 3000 charecters and stitch the audio files back together 
-
-     if len(text) > 3000:
-         print("Text is too long, must be less than 3000 charecters")
-         exit(0)
-
     # Select a voice from the website
      headers = {
      "service": "StreamElements",
@@ -204,46 +198,55 @@ def caption(input_video_file, input_audio_file, output_video_file, title_card, f
 
 # Define constants
 audio_file = "output.mp3"
-
-story_dict = []
 subreddit = "AITAH"
+# The path to your "Videos" folder
+path_to_videos = ""
 
-# Path to the "Video" directory
-path_to_videos = 
+stories, post_ids = get_post(subreddit=subreddit, limit=2)
+useable_stories = []
 
-# Pull the top 5 stories from the subreddit
-stories, post_ids = get_post(limit=1)
+# Process the text to removed anything the AI might get mispronounc like "r/AITAH" or "r/WIBTA"
+# Remove the story if it is too
+for i in range(len(stories)):
+    print(i)
+    full_story = stories[i][0] + "... " + stories[i][1] + ". Make Sure to like and subcribe"    
+
+    if "r/" or "AITAH" or "WIBTA" in (stories[i][0] or stories[i][0]):
+        stories[i][0] = stories[i][0].replace("r/", "")
+        stories[i][0] = stories[i][0].replace("AITAH", "Am I a bad person")
+        stories[i][0] = stories[i][0].replace("WIBTA", "Would I be the bad person")
+
+        stories[i][1] = stories[i][1].replace("r/", "")
+        stories[i][1] = stories[i][1].replace("AITAH", "Am I the bad person")
+        stories[i][1] = stories[i][1].replace("WIBTA", "Would I be the bad person")
+    
+    full_story = full_story.replace("\n", " ")
+
+    if len(full_story) > 3000:
+        pass
+    else:
+        useable_stories.append(full_story) 
+
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
 # Ittirate through the stories
-for i in range(len(stories)):
-
-    # Get the title and story of the story
-    title = stories[i][0]
-    post = stories[i][1]
+for i in range(len(useable_stories)):
 
     # Use the ID of the story to get and image of the title
-    get_title(subreddit="AITAH", post_id=f"{post_ids[i]}", image_file=f"{post_ids[i]}.png")
+    height, width = get_title(subreddit="AITAH", post_id=f"{post_ids[i]}", image_file=f"{post_ids[i]}.png")
 
     # Resize it so it fits
     title_card = ImageClip(f"{post_ids[i]}.png").set_start(0).set_duration(5).set_pos("center")
-    title_card = resize(title, height=220, width=1202)
+
+    if (width > 1080):
+        scaling = 962 / width
+        height = height * scaling
+        title_card = resize(title_card, height=height, width=962)
+    else:
+        pass
 
     # Add a little message at the end of the story
-    story_for_voice_over = title + "... " + post + ". Make Sure to like and subcribe"
-
-    # Process the text to removed anything the AI might get mispronounc like "r/AITAH" or "r/WIBTA"
-    if "r/" or "AITAH" or "WIBTA" in (title or post):
-        title = title.replace("r/", "")
-        title = title.replace("AITAH", "Am I a bad person")
-        title = title.replace("WIBTA", "Would I be the bad person")
-
-        post = post.replace("r/", "")
-        post = post.replace("AITAH", "Am I the bad person")
-        post = post.replace("WIBTA", "Would I be the bad person")
-
-    # Add the title and story to the story together
-    story_for_voice_over = title + "... " + post
-    story_for_voice_over = story_for_voice_over.replace("\n", " ")
+    story_for_voice_over = useable_stories[i]    
 
     # Send it to the voice over website and get the duration of the voice over
     duration = voice_over(text=story_for_voice_over, path_to_file=audio_file)
@@ -287,8 +290,8 @@ for i in range(len(stories)):
     # Cut the video into segments of 55 seconds if it's longer than a minute
     if clip_length > 60:
         video_index = 1  
-        input_video_path = f'{path_to_videos}/Video{video_index}_final_.mp4'
-        output_video_path = f'{path_to_videos}/Video{video_index}/Video{video_index}_final_%03d.mp4'
+        input_video_path = f'{path_to_videos}/Video{i}_final_.mp4'
+        output_video_path = f'{path_to_videos}/Video_{i}/Video{video_index}_final_%03d.mp4'
 
         # Define segment time
         segment_time = '00:00:55'
@@ -303,6 +306,5 @@ for i in range(len(stories)):
             reset_timestamps=1
         ).run(overwrite_output=True)
 
-    # Delete the original video
-    os.remove(f"Video/Video{i}_final_.mp4")
-
+    # Delete the files
+    os.remove(f"{post_ids[i]}.png")
